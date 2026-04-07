@@ -368,7 +368,9 @@ function renderTabla(rows) {
         <th>Código</th>
         <th>Descripción</th>
         <th>MLA</th>
-        <th>Stock</th>
+        <th>Stock CD</th>
+        <th>Stock Total</th>
+        <th>Stock ML</th>
         <th>Stock seg.</th>
         <th>Uds. 30d</th>
         <th>Órdenes 30d</th>
@@ -377,20 +379,26 @@ function renderTabla(rows) {
     </thead>
     <tbody>
       ${rows.map(d => {
-        const stock    = parseInt(d.CANTIDAD_DISPONIBLE) || 0;
-        const seg      = parseInt(d.STOCK_SEGURIDAD) || 0;
-        const uds      = parseInt(d.UNIDADES_30D) || 0;
-        const ords     = parseInt(d.ORDENES_30D) || 0;
-        const stockCls = stock === 0 ? 'stock-zero' : (stock <= seg ? 'stock-warn' : 'stock-ok');
-        const udsCls   = uds > 0 ? 'stock-ok' : 'estado-txt';
-        const mlaUrl   = `https://www.mercadolibre.com.ar/p/${d.CODIGO_ARTICULO_TIENDA}`;
+        const stkCD  = parseInt(d.STOCK_CD)    || 0;
+        const stkTot = parseInt(d.STOCK_TOTAL) || 0;
+        const stkML  = parseInt(d.STOCK_NEXO)  || 0;
+        const seg    = parseInt(d.STOCK_SEGURIDAD) || 0;
+        const uds    = parseInt(d.UNIDADES_30D) || 0;
+        const ords   = parseInt(d.ORDENES_30D)  || 0;
+        const cdCls  = stkCD === 0  ? 'stock-zero' : (stkCD  <= seg ? 'stock-warn' : 'stock-ok');
+        const totCls = stkTot === 0 ? 'stock-zero' : 'stock-ok';
+        const mlCls  = stkML !== stkCD ? 'stock-warn' : 'estado-txt';
+        const udsCls = uds > 0 ? 'stock-ok' : 'estado-txt';
+        const mlaUrl = `https://www.mercadolibre.com.ar/p/${d.CODIGO_ARTICULO_TIENDA}`;
         return `
         <tr>
           <td><span class="sem ${d.SEMAFORO}"><span class="sem-dot"></span>${semLabel(d.SEMAFORO)}</span></td>
           <td><span class="cod-badge">${d.COD_STA11 || '—'}</span></td>
           <td class="desc-cell"><span class="desc-text" title="${esc(d.DESCRIPCION_ARTICULO_TIENDA)}">${esc(d.DESCRIPCION_ARTICULO_TIENDA) || '—'}</span></td>
           <td><a class="mla-link" href="${mlaUrl}" target="_blank">${d.CODIGO_ARTICULO_TIENDA || '—'}</a></td>
-          <td class="${stockCls}">${stock}</td>
+          <td class="${cdCls}">${stkCD}</td>
+          <td class="${totCls}">${stkTot}</td>
+          <td class="${mlCls}" title="Stock que ve MercadoLibre actualmente">${stkML}</td>
           <td>${seg > 0 ? seg : '—'}</td>
           <td class="${udsCls}">${uds > 0 ? uds : '—'}</td>
           <td class="estado-txt">${ords > 0 ? ords : '—'}</td>
@@ -427,7 +435,7 @@ function exportarCSV() {
   const cols = [
     'SEMAFORO','COD_STA11','DESCRIPCION_ARTICULO_TIENDA',
     'CODIGO_ARTICULO_TIENDA','SKU','ESTADO',
-    'CANTIDAD_DISPONIBLE','STOCK_SEGURIDAD',
+    'STOCK_CD','STOCK_TOTAL','STOCK_NEXO','STOCK_SEGURIDAD',
     'UNIDADES_30D','ORDENES_30D','FECHA_VIGENCIA'
   ];
 
@@ -441,7 +449,7 @@ function exportarCSV() {
   const encabezado = [
     'Semaforo','Cod STA11','Descripcion',
     'Codigo ML (MLA)','SKU','Estado Nexo',
-    'Stock Disponible','Stock Seguridad',
+    'Stock CD','Stock Total','Stock ML','Stock Seguridad',
     'Unidades 30d','Ordenes 30d','Fecha Vigencia'
   ].join(',');
 
