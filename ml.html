@@ -115,6 +115,15 @@
   .filtro-btn.verde.active  { background: var(--green); border-color: var(--green); }
   .info-count { font-size: 12px; color: var(--text2); margin-left: auto; }
   .ts { font-size: 11px; color: var(--text2); }
+  .btn-export {
+    padding: 7px 14px; border-radius: 7px;
+    border: 1px solid var(--green);
+    background: var(--card); color: var(--green);
+    cursor: pointer; font-size: 12px; font-family: inherit;
+    font-weight: 600; transition: all .15s;
+    white-space: nowrap;
+  }
+  .btn-export:hover { background: var(--green); color: #fff; }
 
   /* TABLA */
   .tabla-wrap {
@@ -249,6 +258,7 @@
     <button class="filtro-btn verde" data-sem="VERDE" onclick="setSem(this)">🟢 Activas OK</button>
     <span class="info-count" id="info-count"></span>
     <span class="ts" id="ts-label"></span>
+    <button class="btn-export" onclick="exportarCSV()" title="Exportar vista actual a CSV">⬇ Exportar CSV</button>
   </div>
 
   <!-- TABLA -->
@@ -399,6 +409,55 @@ function semLabel(s) {
 }
 function esc(t) {
   return (t || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── EXPORTAR CSV ──────────────────────────────────────────────────────────────
+function exportarCSV() {
+  const q   = (document.getElementById('buscar').value || '').toLowerCase();
+  const filas = datos.filter(d => {
+    const semOk   = semActivo === 'TODOS' || d.SEMAFORO === semActivo;
+    const textoOk = !q ||
+      (d.DESCRIPCION_ARTICULO_TIENDA || '').toLowerCase().includes(q) ||
+      (d.COD_STA11 || '').toLowerCase().includes(q) ||
+      (d.SKU || '').toLowerCase().includes(q) ||
+      (d.CODIGO_ARTICULO_TIENDA || '').toLowerCase().includes(q);
+    return semOk && textoOk;
+  });
+
+  const cols = [
+    'SEMAFORO','COD_STA11','DESCRIPCION_ARTICULO_TIENDA',
+    'CODIGO_ARTICULO_TIENDA','SKU','ESTADO',
+    'CANTIDAD_DISPONIBLE','STOCK_SEGURIDAD',
+    'UNIDADES_30D','ORDENES_30D','FECHA_VIGENCIA'
+  ];
+
+  const escape = v => {
+    const s = (v === null || v === undefined) ? '' : String(v);
+    return s.includes(',') || s.includes('"') || s.includes('\n')
+      ? '"' + s.replace(/"/g, '""') + '"'
+      : s;
+  };
+
+  const encabezado = [
+    'Semaforo','Cod STA11','Descripcion',
+    'Codigo ML (MLA)','SKU','Estado Nexo',
+    'Stock Disponible','Stock Seguridad',
+    'Unidades 30d','Ordenes 30d','Fecha Vigencia'
+  ].join(',');
+
+  const lineas = filas.map(d => cols.map(c => escape(d[c])).join(','));
+  const csv    = '\uFEFF' + encabezado + '\n' + lineas.join('\n'); // BOM para Excel
+
+  const fecha  = new Date().toISOString().slice(0,10);
+  const nombre = `CHEMES_ML_${semActivo}_${fecha}.csv`;
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = nombre;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ── TEMA ──────────────────────────────────────────────────────────────────────
