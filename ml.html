@@ -360,15 +360,20 @@ function renderTabla(rows) {
         <th>MLA</th>
         <th>Stock</th>
         <th>Stock seg.</th>
+        <th>Uds. 30d</th>
+        <th>Órdenes 30d</th>
         <th>Estado Nexo</th>
       </tr>
     </thead>
     <tbody>
       ${rows.map(d => {
-        const stock   = parseInt(d.CANTIDAD_DISPONIBLE) || 0;
-        const seg     = parseInt(d.STOCK_SEGURIDAD) || 0;
+        const stock    = parseInt(d.CANTIDAD_DISPONIBLE) || 0;
+        const seg      = parseInt(d.STOCK_SEGURIDAD) || 0;
+        const uds      = parseInt(d.UNIDADES_30D) || 0;
+        const ords     = parseInt(d.ORDENES_30D) || 0;
         const stockCls = stock === 0 ? 'stock-zero' : (stock <= seg ? 'stock-warn' : 'stock-ok');
-        const mlaUrl  = `https://www.mercadolibre.com.ar/p/${d.CODIGO_ARTICULO_TIENDA}`;
+        const udsCls   = uds > 0 ? 'stock-ok' : 'estado-txt';
+        const mlaUrl   = `https://www.mercadolibre.com.ar/p/${d.CODIGO_ARTICULO_TIENDA}`;
         return `
         <tr>
           <td><span class="sem ${d.SEMAFORO}"><span class="sem-dot"></span>${semLabel(d.SEMAFORO)}</span></td>
@@ -377,6 +382,8 @@ function renderTabla(rows) {
           <td><a class="mla-link" href="${mlaUrl}" target="_blank">${d.CODIGO_ARTICULO_TIENDA || '—'}</a></td>
           <td class="${stockCls}">${stock}</td>
           <td>${seg > 0 ? seg : '—'}</td>
+          <td class="${udsCls}">${uds > 0 ? uds : '—'}</td>
+          <td class="estado-txt">${ords > 0 ? ords : '—'}</td>
           <td class="estado-txt">${d.ESTADO || '—'}</td>
         </tr>`;
       }).join('')}
