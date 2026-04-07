@@ -339,12 +339,14 @@ function setSem(btn) {
 function filtrar() {
   const q = (document.getElementById('buscar').value || '').toLowerCase();
   const filtrados = datos.filter(d => {
-    const semOk  = semActivo === 'TODOS' || d.SEMAFORO === semActivo;
+    const semOk   = semActivo === 'TODOS' || d.SEMAFORO === semActivo;
+    const mla     = 'MLA' + String(d.CODIGO_ARTICULO_TIENDA || '');
     const textoOk = !q ||
       (d.DESCRIPCION_ARTICULO_TIENDA || '').toLowerCase().includes(q) ||
-      (d.COD_STA11 || '').toLowerCase().includes(q) ||
-      (d.SKU || '').toLowerCase().includes(q) ||
-      (d.CODIGO_ARTICULO_TIENDA || '').toLowerCase().includes(q);
+      String(d.COD_STA11 || '').toLowerCase().includes(q) ||
+      String(d.SKU || '').toLowerCase().includes(q) ||
+      String(d.CODIGO_ARTICULO_TIENDA || '').toLowerCase().includes(q) ||
+      mla.toLowerCase().includes(q);
     return semOk && textoOk;
   });
 
@@ -389,13 +391,15 @@ function renderTabla(rows) {
         const totCls = stkTot === 0 ? 'stock-zero' : 'stock-ok';
         const mlCls  = stkML !== stkCD ? 'stock-warn' : 'estado-txt';
         const udsCls = uds > 0 ? 'stock-ok' : 'estado-txt';
-        const mlaUrl = `https://www.mercadolibre.com.ar/p/${d.CODIGO_ARTICULO_TIENDA}`;
+        const mlaRaw = String(d.CODIGO_ARTICULO_TIENDA || '');
+        const mlaCod = mlaRaw.startsWith('MLA') ? mlaRaw : 'MLA' + mlaRaw;
+        const mlaUrl = `https://www.mercadolibre.com.ar/p/${mlaCod}`;
         return `
         <tr>
           <td><span class="sem ${d.SEMAFORO}"><span class="sem-dot"></span>${semLabel(d.SEMAFORO)}</span></td>
           <td><span class="cod-badge">${d.COD_STA11 || '—'}</span></td>
           <td class="desc-cell"><span class="desc-text" title="${esc(d.DESCRIPCION_ARTICULO_TIENDA)}">${esc(d.DESCRIPCION_ARTICULO_TIENDA) || '—'}</span></td>
-          <td><a class="mla-link" href="${mlaUrl}" target="_blank">${d.CODIGO_ARTICULO_TIENDA || '—'}</a></td>
+          <td><a class="mla-link" href="${mlaUrl}" target="_blank">${mlaCod}</a></td>
           <td class="${cdCls}">${stkCD}</td>
           <td class="${totCls}">${stkTot}</td>
           <td class="${mlCls}" title="Stock que ve MercadoLibre actualmente">${stkML}</td>
@@ -424,11 +428,13 @@ function exportarCSV() {
   const q   = (document.getElementById('buscar').value || '').toLowerCase();
   const filas = datos.filter(d => {
     const semOk   = semActivo === 'TODOS' || d.SEMAFORO === semActivo;
+    const mla     = 'MLA' + String(d.CODIGO_ARTICULO_TIENDA || '');
     const textoOk = !q ||
       (d.DESCRIPCION_ARTICULO_TIENDA || '').toLowerCase().includes(q) ||
-      (d.COD_STA11 || '').toLowerCase().includes(q) ||
-      (d.SKU || '').toLowerCase().includes(q) ||
-      (d.CODIGO_ARTICULO_TIENDA || '').toLowerCase().includes(q);
+      String(d.COD_STA11 || '').toLowerCase().includes(q) ||
+      String(d.SKU || '').toLowerCase().includes(q) ||
+      String(d.CODIGO_ARTICULO_TIENDA || '').toLowerCase().includes(q) ||
+      mla.toLowerCase().includes(q);
     return semOk && textoOk;
   });
 
