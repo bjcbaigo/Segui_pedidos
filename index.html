@@ -282,7 +282,13 @@ body {
 .section-title-icon { color: var(--blue); font-size: 15px; }
 .table-count { font-size: 11px; color: var(--g400); }
 
-.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: calc(100vh - 320px);
+  min-height: 300px;
+}
 table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 680px; }
 thead th {
   background: var(--g50);
@@ -294,6 +300,9 @@ thead th {
   letter-spacing: .5px;
   border-bottom: 1px solid var(--g200);
   white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 thead th.r { text-align: right; }
 tbody tr { border-bottom: 1px solid var(--g100); transition: background .1s; cursor: pointer; }
@@ -704,7 +713,7 @@ td.r { text-align: right; }
 <div class="toast" id="toast"></div>
 
 <script>
-const GAS = 'https://script.google.com/macros/s/AKfycbwj4p_mjSZwhbpPNj7910nCQ1AFd11J6xkqXHOV6cENl7eUJvmCju-sUyzqgrTT-65K/exec';
+const GAS = 'https://script.google.com/macros/s/AKfycbw8Hr6JScCCAoW9jinGeq_m7uUYtpF_VIx3FNI57qaxoZoCz5TjFVZ0uZTpOfPwbLo/exec';
 const SUC_EXCLUIR = new Set([1, 2, 84, 100, 101, 300]);
 
 let DATA = [], fAct = 'todos', bAct = '';
