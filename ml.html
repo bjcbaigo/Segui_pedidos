@@ -376,13 +376,12 @@ function filtrar() {
   const q = (document.getElementById('buscar').value || '').toLowerCase();
   const filtrados = datos.filter(d => {
     const semOk   = semActivo === 'TODOS' || d.SEMAFORO === semActivo;
-    const mla     = 'MLA' + String(d.CODIGO_ARTICULO_TIENDA || '');
+    const mlaBusq = String(d.CODIGO_ARTICULO_TIENDA || '');
     const textoOk = !q ||
       (d.DESCRIPCION_ARTICULO_TIENDA || '').toLowerCase().includes(q) ||
       String(d.COD_STA11 || '').toLowerCase().includes(q) ||
       String(d.SKU || '').toLowerCase().includes(q) ||
-      String(d.CODIGO_ARTICULO_TIENDA || '').toLowerCase().includes(q) ||
-      mla.toLowerCase().includes(q);
+      mlaBusq.toLowerCase().includes(q);
     return semOk && textoOk;
   });
 
@@ -478,13 +477,12 @@ function exportarCSV() {
   const q   = (document.getElementById('buscar').value || '').toLowerCase();
   const filas = datos.filter(d => {
     const semOk   = semActivo === 'TODOS' || d.SEMAFORO === semActivo;
-    const mla     = 'MLA' + String(d.CODIGO_ARTICULO_TIENDA || '');
+    const mlaBusq = String(d.CODIGO_ARTICULO_TIENDA || '');
     const textoOk = !q ||
       (d.DESCRIPCION_ARTICULO_TIENDA || '').toLowerCase().includes(q) ||
       String(d.COD_STA11 || '').toLowerCase().includes(q) ||
       String(d.SKU || '').toLowerCase().includes(q) ||
-      String(d.CODIGO_ARTICULO_TIENDA || '').toLowerCase().includes(q) ||
-      mla.toLowerCase().includes(q);
+      mlaBusq.toLowerCase().includes(q);
     return semOk && textoOk;
   });
 
