@@ -220,6 +220,10 @@
     flex-shrink: 0; cursor: help;
   }
   .ml-ok { color: var(--text2); font-size: 13px; }
+  .precio-ml  { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--green); }
+  .precio-dif-alto { color: var(--red);   font-size: 10px; font-weight: 600; }
+  .precio-dif-bajo { color: var(--green); font-size: 10px; font-weight: 600; }
+  .precio-cargando { color: var(--text2); font-size: 10px; font-style: italic; }
 
   /* ESTADO TEXTO */
   .estado-txt { font-size: 12px; color: var(--text2); }
@@ -387,6 +391,8 @@ function filtrar() {
 
   document.getElementById('info-count').textContent = `${filtrados.length} publicaciones`;
   renderTabla(filtrados);
+  // Cargar precios reales de ML en background (async, no bloquea la UI)
+  cargarPreciosML(filtrados);
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
@@ -412,6 +418,7 @@ function renderTabla(rows) {
         <th>Uds. 30d</th>
         <th>Órdenes 30d</th>
         <th class="r">Precio L20</th>
+        <th class="r">Precio ML</th>
         <th>Última venta</th>
         <th>Estado Nexo</th>
       </tr>
@@ -454,6 +461,9 @@ function renderTabla(rows) {
               ? '$'+Number(parseFloat(d.PRECIO_L20)).toLocaleString('es-AR',{minimumFractionDigits:0})
               : '<span style="color:var(--text2);font-style:italic">—</span>'
           }</td>
+          <td class="r" id="pml-${mlaCod}" data-mla="${mlaCod}" data-l20="${parseFloat(d.PRECIO_L20)||0}">
+            <span class="precio-cargando">...</span>
+          </td>
           <td class="estado-txt">${d.ULTIMA_VENTA ? d.ULTIMA_VENTA.slice(0,10) : '—'}</td>
           <td class="estado-txt">${d.ESTADO || '—'}</td>
         </tr>`;
@@ -520,6 +530,65 @@ function exportarCSV() {
   a.download = nombre;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// ── PRECIOS ML — consulta API pública MercadoLibre ──────────────────────────────
+// Consulta en batch: hasta 20 MLAs por request
+async function cargarPreciosML(rows) {
+  if (!rows || !rows.length) return;
+
+  // Agrupar MLAs únicos de las filas visibles
+  const mlas = [...new Set(
+    rows.map(d => {
+      const c = String(d.CODIGO_ARTICULO_TIENDA || '');
+      return c.startsWith('MLA') ? c : 'MLA' + c;
+    }).filter(c => c.length > 3)
+  )];
+
+  // Procesar en lotes de 20 (límite de la API pública de ML)
+  const BATCH = 20;
+  for (let i = 0; i < mlas.length; i += BATCH) {
+    const lote = mlas.slice(i, i + BATCH);
+    const ids  = lote.join(',');
+    try {
+      const resp = await fetch(`https://api.mercadolibre.com/items?ids=${ids}&attributes=id,price,status`);
+      if (!resp.ok) continue;
+      const data = await resp.json();
+
+      data.forEach(item => {
+        if (!item || item.code !== 200) return;
+        const d   = item.body;
+        const id  = d.id;
+        const cel = document.getElementById('pml-' + id);
+        if (!cel) return;
+
+        const precioML = d.price || 0;
+        const l20      = parseFloat(cel.dataset.l20) || 0;
+        const fmt      = v => '$' + Number(v).toLocaleString('es-AR', {minimumFractionDigits:0});
+
+        if (!precioML) {
+          cel.innerHTML = '<span style="color:var(--text2);font-style:italic">—</span>';
+          return;
+        }
+
+        let difHtml = '';
+        if (l20 > 0) {
+          const dif = ((precioML - l20) / l20 * 100);
+          if (Math.abs(dif) >= 1) {
+            const cls = dif > 0 ? 'precio-dif-alto' : 'precio-dif-bajo';
+            const sig = dif > 0 ? '▲' : '▼';
+            difHtml = `<br><span class="${cls}">${sig}${Math.abs(dif).toFixed(1)}% vs L20</span>`;
+          }
+        }
+
+        cel.innerHTML = `<span class="precio-ml">${fmt(precioML)}</span>${difHtml}`;
+      });
+    } catch(err) {
+      console.warn('Error consultando ML API lote:', err);
+    }
+    // Pausa entre lotes para no saturar la API
+    if (i + BATCH < mlas.length) await new Promise(r => setTimeout(r, 300));
+  }
 }
 
 // ── TEMA ──────────────────────────────────────────────────────────────────────
