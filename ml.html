@@ -311,7 +311,7 @@
 <div class="footer">CHEMES · Monitor ML · Datos actualizados cada hora desde Tango Nexo</div>
 
 <script>
-const GAS = 'https://script.google.com/macros/s/AKfycbz6ihNLyY-P4fd__fXOvarI5HMMTXXBwM36CzFrinsm_SzP3eJydEiaJyFNqxdWRU_x/exec';
+const GAS = 'https://script.google.com/macros/s/AKfycbzPo-CBTwdkxoa291dRUybeEnr3OQH-Nq3O6Jv5p7ptKsRyyaOJj35ESINFU7fg13bR/exec';
 
 let datos     = [];
 let semActivo = 'TODOS';
@@ -412,6 +412,7 @@ function renderTabla(rows) {
         <th>Stock seg.</th>
         <th>Uds. 30d</th>
         <th>Órdenes 30d</th>
+        <th class="r">Precio L20</th>
         <th>Última venta</th>
         <th>Estado Nexo</th>
       </tr>
@@ -449,6 +450,11 @@ function renderTabla(rows) {
           <td>${seg > 0 ? seg : '—'}</td>
           <td class="${udsCls}">${uds > 0 ? uds : '—'}</td>
           <td class="estado-txt">${ords > 0 ? ords : '—'}</td>
+          <td class="r" style="font-family:monospace;font-size:11px">${
+            d.PRECIO_L20 && parseFloat(d.PRECIO_L20) > 0
+              ? '$'+Number(parseFloat(d.PRECIO_L20)).toLocaleString('es-AR',{minimumFractionDigits:0})
+              : '<span style="color:var(--text2);font-style:italic">—</span>'
+          }</td>
           <td class="estado-txt">${d.ULTIMA_VENTA ? d.ULTIMA_VENTA.slice(0,10) : '—'}</td>
           <td class="estado-txt">${d.ESTADO || '—'}</td>
         </tr>`;
@@ -486,7 +492,7 @@ function exportarCSV() {
     'SEMAFORO','COD_STA11','DESCRIPCION_ARTICULO_TIENDA',
     'CODIGO_ARTICULO_TIENDA','SKU','ESTADO',
     'STOCK_CD','STOCK_TOTAL','STOCK_NEXO','STOCK_SEGURIDAD',
-    'UNIDADES_30D','ORDENES_30D','ULTIMA_VENTA','FECHA_VIGENCIA'
+    'UNIDADES_30D','ORDENES_30D','ULTIMA_VENTA','FECHA_VIGENCIA','PRECIO_L20'
   ];
 
   const escape = v => {
@@ -500,7 +506,7 @@ function exportarCSV() {
     'Semaforo','Cod STA11','Descripcion',
     'Codigo ML (MLA)','SKU','Estado Nexo',
     'Stock CD','Stock Total','Stock ML','Stock Seguridad',
-    'Unidades 30d','Ordenes 30d','Ultima Venta','Fecha Vigencia'
+    'Unidades 30d','Ordenes 30d','Ultima Venta','Fecha Vigencia','Precio Lista 20'
   ].join(',');
 
   const lineas = filas.map(d => cols.map(c => escape(d[c])).join(','));
