@@ -190,8 +190,10 @@
   .sem.ROJO    { background: #fee2e2; color: #991b1b; }
   .sem.ROJO    .sem-dot { background: var(--red); animation: pulse-red 1.2s infinite; }
   .sem.GRIS     { background: #f1f5f9; color: var(--text2); }
-  .sem.SIN_STOCK{ background: #fff1f0; color: #c0392b; border: 1px solid #fca5a5; }
+  .sem.SIN_STOCK { background: #fff1f0; color: #c0392b; border: 1px solid #fca5a5; }
   .sem.SIN_STOCK .sem-dot { background: #ef4444; animation: pulse-red 1.2s infinite; }
+  .sem.HUERFANA  { background: #f5f3ff; color: #6d28d9; border: 1px solid #c4b5fd; }
+  .sem.HUERFANA  .sem-dot { background: #8b5cf6; }
   .sem.GRIS    .sem-dot { background: var(--gray); }
 
   @keyframes pulse-amber {
@@ -270,7 +272,8 @@
     <div class="res-card rojo"><div class="valor" id="cnt-rojo">—</div><div class="label">🔴 Pausadas / Inactivas</div></div>
     <div class="res-card ambar"><div class="valor" id="cnt-ambar">—</div><div class="label">🟡 Requieren atención</div></div>
     <div class="res-card verde"><div class="valor" id="cnt-verde">—</div><div class="label">🟢 Activas OK</div></div>
-    <div class="res-card rojo"><div class="valor" id="cnt-sinstock">—</div><div class="label">⚪ Activas sin stock CD</div></div>
+    <div class="res-card rojo"><div class="valor" id="cnt-sinstock">—</div><div class="label">⚪ Sin stock CD</div></div>
+    <div class="res-card" style="border-top:3px solid #8b5cf6"><div class="valor" id="cnt-huerfana" style="color:#6d28d9">—</div><div class="label">👻 Huérfanas</div></div>
   </div>
 
   <!-- CONTROLES -->
@@ -281,6 +284,7 @@
     <button class="filtro-btn ambar" data-sem="AMARILLO" onclick="setSem(this)">🟡 Atención</button>
     <button class="filtro-btn verde"  data-sem="VERDE"     onclick="setSem(this)">🟢 Activas OK</button>
     <button class="filtro-btn rojo"   data-sem="SIN_STOCK" onclick="setSem(this)" style="border-color:#fca5a5;color:#c0392b;">⚪ Sin stock CD</button>
+    <button class="filtro-btn"        data-sem="HUERFANA"  onclick="setSem(this)" style="border-color:#c4b5fd;color:#6d28d9;">👻 Huérfanas</button>
     <span class="info-count" id="info-count"></span>
     <span class="ts" id="ts-label"></span>
     <button class="btn-export" onclick="exportarCSV()" title="Exportar vista actual a CSV">⬇ Exportar CSV</button>
@@ -349,12 +353,14 @@ function actualizarResumen() {
   const rojo   = datos.filter(d => d.SEMAFORO === 'ROJO').length;
   const ambar  = datos.filter(d => d.SEMAFORO === 'AMARILLO').length;
   const verde    = datos.filter(d => d.SEMAFORO === 'VERDE').length;
-  const sinstock = datos.filter(d => d.SEMAFORO === 'SIN_STOCK').length;
+  const sinstock  = datos.filter(d => d.SEMAFORO === 'SIN_STOCK').length;
+  const huerfana  = datos.filter(d => d.SEMAFORO === 'HUERFANA').length;
   document.getElementById('cnt-total').textContent    = total;
   document.getElementById('cnt-rojo').textContent     = rojo;
   document.getElementById('cnt-ambar').textContent    = ambar;
   document.getElementById('cnt-verde').textContent    = verde;
   document.getElementById('cnt-sinstock').textContent = sinstock;
+  document.getElementById('cnt-huerfana').textContent = huerfana;
 }
 
 // ── FILTROS ───────────────────────────────────────────────────────────────────
@@ -405,6 +411,7 @@ function renderTabla(rows) {
         <th>Stock seg.</th>
         <th>Uds. 30d</th>
         <th>Órdenes 30d</th>
+        <th>Última venta</th>
         <th>Estado Nexo</th>
       </tr>
     </thead>
@@ -441,6 +448,7 @@ function renderTabla(rows) {
           <td>${seg > 0 ? seg : '—'}</td>
           <td class="${udsCls}">${uds > 0 ? uds : '—'}</td>
           <td class="estado-txt">${ords > 0 ? ords : '—'}</td>
+          <td class="estado-txt">${d.ULTIMA_VENTA ? d.ULTIMA_VENTA.slice(0,10) : '—'}</td>
           <td class="estado-txt">${d.ESTADO || '—'}</td>
         </tr>`;
       }).join('')}
@@ -451,7 +459,7 @@ function renderTabla(rows) {
 }
 
 function semLabel(s) {
-  const m = { VERDE: 'ACTIVO', AMARILLO: 'ATENCIÓN', ROJO: 'PAUSADO', GRIS: 'INACTIVO', SIN_STOCK: 'SIN STOCK CD' };
+  const m = { VERDE: 'ACTIVO', AMARILLO: 'ATENCIÓN', ROJO: 'PAUSADO', GRIS: 'INACTIVO', SIN_STOCK: 'SIN STOCK CD', HUERFANA: 'HUÉRFANA' };
   return m[s] || s;
 }
 function esc(t) {
@@ -477,7 +485,7 @@ function exportarCSV() {
     'SEMAFORO','COD_STA11','DESCRIPCION_ARTICULO_TIENDA',
     'CODIGO_ARTICULO_TIENDA','SKU','ESTADO',
     'STOCK_CD','STOCK_TOTAL','STOCK_NEXO','STOCK_SEGURIDAD',
-    'UNIDADES_30D','ORDENES_30D','FECHA_VIGENCIA'
+    'UNIDADES_30D','ORDENES_30D','ULTIMA_VENTA','FECHA_VIGENCIA'
   ];
 
   const escape = v => {
@@ -491,7 +499,7 @@ function exportarCSV() {
     'Semaforo','Cod STA11','Descripcion',
     'Codigo ML (MLA)','SKU','Estado Nexo',
     'Stock CD','Stock Total','Stock ML','Stock Seguridad',
-    'Unidades 30d','Ordenes 30d','Fecha Vigencia'
+    'Unidades 30d','Ordenes 30d','Ultima Venta','Fecha Vigencia'
   ].join(',');
 
   const lineas = filas.map(d => cols.map(c => escape(d[c])).join(','));
