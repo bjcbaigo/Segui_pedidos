@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHEMES · Informes ML</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue:    #2596be;
+  --blue-dk: #1a7a9e;
+  --blue-lt: #eaf6fb;
+  --green:   #1D9E75;
+  --green-lt:#ecfdf5;
+  --amber:   #BA7517;
+  --amber-lt:#fffbeb;
+  --red:     #C0392B;
+  --red-lt:  #fef2f2;
+  --purple:  #7c3aed;
+  --purple-lt:#f5f3ff;
+  --g50:     #f8fafc;
+  --g100:    #f1f5f9;
+  --g200:    #e2e8f0;
+  --g300:    #cbd5e1;
+  --g400:    #94a3b8;
+  --g500:    #64748b;
+  --g700:    #334155;
+  --g900:    #0f172a;
+  --white:   #ffffff;
+  --card-r:  10px;
+  --shadow:  0 1px 3px rgba(0,0,0,.08);
+}
+[data-theme="dark"] {
+  --g50:#1e293b; --g100:#0f172a; --g200:#1e293b; --g300:#334155;
+  --g400:#64748b; --g500:#94a3b8; --g700:#cbd5e1; --g900:#f1f5f9;
+  --white:#1e293b; --blue-lt:#0c2d3e; --green-lt:#052e1e;
+  --amber-lt:#2d1d00; --red-lt:#2d0a0a; --purple-lt:#1e1040;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--g100);color:var(--g900);min-height:100vh;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--g100)}
+::-webkit-scrollbar-thumb{background:var(--g300);border-radius:3px}
+
+/* HEADER */
+.hdr{background:var(--blue);color:#fff;padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.hdr-left{display:flex;align-items:center;gap:10px}
+.hdr-logo{width:30px;height:30px;background:rgba(255,255,255,.15);border-radius:7px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.hdr-logo img{width:100%;height:100%;object-fit:contain}
+.hdr-title{font-size:14px;font-weight:700;letter-spacing:-.2px}
+.hdr-sub{font-size:10px;opacity:.75}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.nav-link{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;transition:background .15s}
+.nav-link:hover{background:rgba(255,255,255,.28)}
+.btn-icon{width:32px;height:32px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:6px;cursor:pointer;color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center;transition:background .15s;font-family:inherit}
+.btn-icon:hover{background:rgba(255,255,255,.28)}
+.clock-pill{background:rgba(255,255,255,.12);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:500;font-variant-numeric:tabular-nums}
+.btn-reload{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:'DM Sans',sans-serif;transition:background .15s;white-space:nowrap}
+.btn-reload:hover{background:rgba(255,255,255,.28)}
+.btn-reload.loading{opacity:.6;pointer-events:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin .8s linear infinite;display:inline-block}
+
+/* TABS */
+.tabs-bar{background:var(--white);border-bottom:2px solid var(--g200);padding:0 16px;display:flex;gap:0;position:sticky;top:52px;z-index:100}
+.tab{padding:14px 18px;font-size:13px;font-weight:600;color:var(--g400);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;display:flex;align-items:center;gap:7px;transition:color .15s,border-color .15s;white-space:nowrap}
+.tab:hover{color:var(--g700)}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-count{background:var(--g100);color:var(--g500);border-radius:12px;padding:2px 7px;font-size:11px;font-weight:600}
+.tab.active .tab-count{background:var(--blue-lt);color:var(--blue)}
+
+/* MAIN */
+.main{max-width:1400px;margin:0 auto;padding:14px 12px 32px}
+.panel{display:none}
+.panel.active{display:block}
+
+/* KPI STRIP */
+.kpi-strip{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.kpi{background:var(--white);border:1px solid var(--g200);border-radius:var(--card-r);padding:14px 18px;box-shadow:var(--shadow);flex:1;min-width:140px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.c-blue::before{background:var(--blue)}
+.kpi.c-green::before{background:var(--green)}
+.kpi.c-amber::before{background:var(--amber)}
+.kpi.c-red::before{background:var(--red)}
+.kpi.c-purple::before{background:var(--purple)}
+.kpi-label{font-size:10px;font-weight:600;color:var(--g400);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.kpi-val{font-size:24px;font-weight:700;line-height:1;letter-spacing:-.5px}
+.kpi-val.blue{color:var(--blue)}
+.kpi-val.green{color:var(--green)}
+.kpi-val.amber{color:var(--amber)}
+.kpi-val.red{color:var(--red)}
+.kpi-val.purple{color:var(--purple)}
+
+/* CONTROLES */
+.ctrl{background:var(--white);border:1px solid var(--g200);border-radius:var(--card-r);padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;box-shadow:var(--shadow)}
+.ctrl input[type=text]{flex:1;min-width:200px;padding:7px 12px;border:1px solid var(--g200);border-radius:7px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--g50);color:var(--g900);outline:none}
+.ctrl input[type=text]:focus{border-color:var(--blue)}
+.fbtn{padding:5px 12px;border-radius:20px;border:1px solid var(--g200);background:var(--g50);color:var(--g700);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap}
+.fbtn:hover,.fbtn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.fbtn.f-amber.active{background:var(--amber);border-color:var(--amber)}
+.fbtn.f-red.active{background:var(--red);border-color:var(--red)}
+.fbtn.f-green.active{background:var(--green);border-color:var(--green)}
+.fbtn.f-purple.active{background:var(--purple);border-color:var(--purple)}
+.info-cnt{font-size:11px;color:var(--g400);margin-left:auto}
+.btn-export{padding:7px 14px;border-radius:7px;border:1px solid var(--green);background:var(--white);color:var(--green);cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:600;transition:all .15s;white-space:nowrap}
+.btn-export:hover{background:var(--green);color:#fff}
+
+/* TABLA */
+.tbl-card{background:var(--white);border:1px solid var(--g200);border-radius:var(--card-r);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+.tbl-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--g200);flex-shrink:0}
+.tbl-hdr-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px}
+.tbl-scroll{overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 340px);min-height:280px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(--g50);padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--g200);white-space:nowrap;position:sticky;top:0;z-index:10}
+thead th.r{text-align:right}
+tbody tr{border-bottom:1px solid var(--g100);cursor:default;transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover td{background:var(--g50)}
+td{padding:9px 12px;vertical-align:middle}
+td.r{text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px}
+td.mono{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--g500)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-red{background:var(--red-lt);color:var(--red)}
+.badge-green{background:var(--green-lt);color:var(--green)}
+.badge-amber{background:var(--amber-lt);color:var(--amber)}
+.badge-blue{background:var(--blue-lt);color:var(--blue)}
+.badge-purple{background:var(--purple-lt);color:var(--purple)}
+.badge-gray{background:var(--g100);color:var(--g500)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot-red{background:var(--red)}
+.dot-green{background:var(--green)}
+.dot-amber{background:var(--amber)}
+.dot-blue{background:var(--blue)}
+.dot-purple{background:var(--purple)}
+
+/* PRECIO DIFF */
+.p-up{color:var(--red);font-weight:600}
+.p-down{color:var(--green);font-weight:600}
+.p-eq{color:var(--g400)}
+.p-na{color:var(--g300);font-style:italic}
+
+/* COD BADGE */
+.cod{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--blue-lt);color:var(--blue);padding:2px 6px;border-radius:4px}
+.mla-link{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);text-decoration:none}
+.mla-link:hover{text-decoration:underline}
+.desc-cell{max-width:300px}
+.desc-txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:300px}
+
+/* LOADING / ERROR */
+.loading-row td,.empty-row td{text-align:center;padding:32px;color:var(--g400);font-size:13px}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--g200);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin-right:8px;vertical-align:middle}
+
+/* ORDENES */
+.estado-badge{padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
+.est-FIN{background:#ecfdf5;color:#065f46}
+.est-CAN{background:#fef2f2;color:#991b1b}
+.est-PRO{background:#fffbeb;color:#92400e}
+.est-REC{background:#fef2f2;color:#991b1b}
+.est-OTR{background:var(--g100);color:var(--g500)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-left">
+    <div class="hdr-logo">
+      <img src="https://bjcbaigo.github.io/Segui_pedidos/IsolologoCH.png" alt="CH"
+           onerror="this.style.display='none';this.parentElement.textContent='CH'">
+    </div>
+    <div>
+      <div class="hdr-title">CHEMES · Informes ML</div>
+      <div class="hdr-sub">CHEMESCASACENTRAL · datos en tiempo real</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <a href="https://bjcbaigo.github.io/Segui_pedidos/" class="nav-link">📦 Pedidos</a>
+    <a href="https://bjcbaigo.github.io/Segui_pedidos/ml.html" class="nav-link">🛒 Monitor ML</a>
+    <div class="clock-pill" id="clock">—</div>
+    <button class="btn-reload" id="btnR" onclick="recargar()">
+      <span id="ricon">↻</span> Actualizar
+    </button>
+    <button class="btn-icon" onclick="toggleTheme()" id="themeBtn">🌙</button>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs-bar">
+  <div class="tab active" onclick="setTab(0,this)" id="tab0">
+    💰 Precios desactualizados <span class="tab-count" id="tc0">—</span>
+  </div>
+  <div class="tab" onclick="setTab(1,this)" id="tab1">
+    🚫 Artículos deshabilitados <span class="tab-count" id="tc1">—</span>
+  </div>
+  <div class="tab" onclick="setTab(2,this)" id="tab2">
+    📋 Órdenes ML <span class="tab-count" id="tc2">—</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- ═══════════════════════════════════════════════════════
+     PANEL 0 — PRECIOS DESACTUALIZADOS
+═══════════════════════════════════════════════════════ -->
+<div class="panel active" id="panel0">
+  <div class="kpi-strip">
+    <div class="kpi c-blue"><div class="kpi-label">Publicaciones con precio</div><div class="kpi-val blue" id="p0-total">—</div></div>
+    <div class="kpi c-red"><div class="kpi-label">Precio Nexo &gt; Lista WEB</div><div class="kpi-val red" id="p0-alto">—</div></div>
+    <div class="kpi c-green"><div class="kpi-label">Precio Nexo &lt; Lista WEB</div><div class="kpi-val green" id="p0-bajo">—</div></div>
+    <div class="kpi c-amber"><div class="kpi-label">Sin precio en lista WEB</div><div class="kpi-val amber" id="p0-sinprecio">—</div></div>
+  </div>
+  <div class="ctrl">
+    <input type="text" id="q0" placeholder="Buscar por descripción, código, MLA..." oninput="filtrar(0)">
+    <button class="fbtn active" data-f="todos" onclick="setF(0,this)">Todos</button>
+    <button class="fbtn f-red"    data-f="alto"     onclick="setF(0,this)">🔴 Nexo &gt; WEB</button>
+    <button class="fbtn f-green"  data-f="bajo"     onclick="setF(0,this)">🟢 Nexo &lt; WEB</button>
+    <button class="fbtn f-amber"  data-f="sinprecio" onclick="setF(0,this)">⚪ Sin precio WEB</button>
+    <span class="info-cnt" id="ic0"></span>
+    <button class="btn-export" onclick="exportar(0)">⬇ CSV</button>
+  </div>
+  <div class="tbl-card">
+    <div class="tbl-hdr">
+      <div class="tbl-hdr-title">💰 Comparación precio Nexo vs Lista WEB (Lista 20)</div>
+    </div>
+    <div class="tbl-scroll">
+      <div id="tbody0"><div class="loading-row" style="text-align:center;padding:32px;color:#94a3b8"><span class="spinner"></span>Cargando...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PANEL 1 — ARTÍCULOS DESHABILITADOS
+═══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel1">
+  <div class="kpi-strip">
+    <div class="kpi c-red"><div class="kpi-label">Publicaciones activas deshabilitadas</div><div class="kpi-val red" id="p1-total">—</div></div>
+    <div class="kpi c-amber"><div class="kpi-label">Con stock CD &gt; 0</div><div class="kpi-val amber" id="p1-constock">—</div></div>
+    <div class="kpi c-blue"><div class="kpi-label">Con ventas en 30d</div><div class="kpi-val blue" id="p1-ventas">—</div></div>
+  </div>
+  <div class="ctrl">
+    <input type="text" id="q1" placeholder="Buscar por descripción, código, MLA..." oninput="filtrar(1)">
+    <button class="fbtn active" data-f="todos"    onclick="setF(1,this)">Todos</button>
+    <button class="fbtn f-amber" data-f="constock" onclick="setF(1,this)">📦 Con stock CD</button>
+    <button class="fbtn f-blue"  data-f="ventas"   onclick="setF(1,this)">📈 Con ventas 30d</button>
+    <span class="info-cnt" id="ic1"></span>
+    <button class="btn-export" onclick="exportar(1)">⬇ CSV</button>
+  </div>
+  <div class="tbl-card">
+    <div class="tbl-hdr">
+      <div class="tbl-hdr-title">🚫 Artículos deshabilitados en Tango con publicaciones activas en ML</div>
+    </div>
+    <div class="tbl-scroll">
+      <div id="tbody1"><div class="loading-row" style="text-align:center;padding:32px;color:#94a3b8"><span class="spinner"></span>Cargando...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PANEL 2 — ÓRDENES ML
+═══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel2">
+  <div class="kpi-strip">
+    <div class="kpi c-blue"><div class="kpi-label">Órdenes (30 días)</div><div class="kpi-val blue" id="p2-total">—</div></div>
+    <div class="kpi c-green"><div class="kpi-label">Finalizadas</div><div class="kpi-val green" id="p2-fin">—</div></div>
+    <div class="kpi c-amber"><div class="kpi-label">En proceso</div><div class="kpi-val amber" id="p2-proc">—</div></div>
+    <div class="kpi c-red"><div class="kpi-label">Canceladas / Anuladas</div><div class="kpi-val red" id="p2-can">—</div></div>
+  </div>
+  <div class="ctrl">
+    <input type="text" id="q2" placeholder="Buscar por orden, cliente, artículo..." oninput="filtrar(2)">
+    <button class="fbtn active"  data-f="todos"    onclick="setF(2,this)">Todos</button>
+    <button class="fbtn f-green" data-f="FIN"       onclick="setF(2,this)">✅ Finalizadas</button>
+    <button class="fbtn f-amber" data-f="PRO"       onclick="setF(2,this)">🔄 En proceso</button>
+    <button class="fbtn f-red"   data-f="CAN"       onclick="setF(2,this)">❌ Canceladas</button>
+    <span class="info-cnt" id="ic2"></span>
+    <button class="btn-export" onclick="exportar(2)">⬇ CSV</button>
+  </div>
+  <div class="tbl-card">
+    <div class="tbl-hdr">
+      <div class="tbl-hdr-title">📋 Órdenes MercadoLibre — últimos 30 días</div>
+    </div>
+    <div class="tbl-scroll">
+      <div id="tbody2"><div class="loading-row" style="text-align:center;padding:32px;color:#94a3b8"><span class="spinner"></span>Cargando...</div></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+const GAS = 'https://script.google.com/macros/s/AKfycbwj4p_mjSZwhbpPNj7910nCQ1AFd11J6xkqXHOV6cENl7eUJvmCju-sUyzqgrTT-65K/exec';
+
+let tabActivo = 0;
+let filtros   = ['todos','todos','todos'];
+let DATA      = { precios: [], deshabilitados: [], ordenes: [] };
+
+// ── TABS ─────────────────────────────────────────────────────
+function setTab(n, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel'+n).classList.add('active');
+  tabActivo = n;
+}
+
+// ── FILTROS ──────────────────────────────────────────────────
+function setF(tab, btn) {
+  document.querySelectorAll('#panel'+tab+' .fbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filtros[tab] = btn.dataset.f;
+  renderTab(tab);
+}
+function filtrar(tab) { renderTab(tab); }
+
+// ── CARGA JSONP ──────────────────────────────────────────────
+function recargar() {
+  document.getElementById('btnR').classList.add('loading');
+  document.getElementById('ricon').className = 'spin';
+  document.getElementById('ricon').textContent = '↻';
+  cargarPrecios();
+  cargarDeshabilitados();
+  cargarOrdenes();
+}
+
+function resetBtn() {
+  document.getElementById('btnR').classList.remove('loading');
+  document.getElementById('ricon').className = '';
+  document.getElementById('ricon').textContent = '↻';
+}
+
+function jsonp(accion, callback) {
+  const s = document.createElement('script');
+  s.src = `${GAS}?accion=${accion}&callback=${callback}&t=${Date.now()}`;
+  s.onerror = () => { resetBtn(); s.remove(); };
+  document.head.appendChild(s);
+  setTimeout(() => s.remove(), 20000);
+}
+
+// ── PRECIOS ──────────────────────────────────────────────────
+function cargarPrecios() { jsonp('precios','recibirPrecios'); }
+
+function recibirPrecios(r) {
+  resetBtn();
+  if (!r || !r.ok) return;
+  DATA.precios = r.data || [];
+  renderPrecios();
+}
+
+function renderPrecios() {
+  const q   = (document.getElementById('q0').value||'').toLowerCase();
+  const fil = filtros[0];
+
+  const rows = DATA.precios.filter(d => {
+    const txt = !q || [d.COD_STA11,d.DESCRIPCION,d.CODIGO_MLA,d.SKU]
+      .some(v => (v||'').toLowerCase().includes(q));
+    if (!txt) return false;
+    if (fil === 'todos')     return true;
+    if (fil === 'alto')      return d.DIFF_PCT > 0;
+    if (fil === 'bajo')      return d.DIFF_PCT < 0;
+    if (fil === 'sinprecio') return !d.PRECIO_WEB || d.PRECIO_WEB == 0;
+    return true;
+  });
+
+  const total    = DATA.precios.length;
+  const alto     = DATA.precios.filter(d => d.DIFF_PCT > 0).length;
+  const bajo     = DATA.precios.filter(d => d.DIFF_PCT < 0).length;
+  const sinprecio= DATA.precios.filter(d => !d.PRECIO_WEB || d.PRECIO_WEB==0).length;
+
+  document.getElementById('p0-total').textContent    = total;
+  document.getElementById('p0-alto').textContent     = alto;
+  document.getElementById('p0-bajo').textContent     = bajo;
+  document.getElementById('p0-sinprecio').textContent= sinprecio;
+  document.getElementById('tc0').textContent         = total;
+  document.getElementById('ic0').textContent         = `${rows.length} publicaciones`;
+
+  if (!rows.length) {
+    document.getElementById('tbody0').innerHTML =
+      '<div style="text-align:center;padding:32px;color:#94a3b8">Sin resultados</div>';
+    return;
+  }
+
+  const fmt = v => v ? '$'+Number(v).toLocaleString('es-AR',{minimumFractionDigits:0}) : '—';
+
+  document.getElementById('tbody0').innerHTML = `
+  <table><thead><tr>
+    <th>Código</th><th>Descripción</th><th>MLA</th>
+    <th class="r">Precio Nexo</th><th class="r">Precio WEB (L20)</th>
+    <th class="r">Diferencia</th><th>Última actualización</th>
+  </tr></thead><tbody>
+  ${rows.map(d => {
+    const mla  = 'MLA'+String(d.CODIGO_MLA||'');
+    const url  = `https://www.mercadolibre.com.ar/p/${mla}`;
+    const diff = d.DIFF_PCT;
+    let dcls='p-eq', dstr='=';
+    if (diff > 0)  { dcls='p-up';   dstr=`+${Number(diff).toFixed(1)}%`; }
+    if (diff < 0)  { dcls='p-down'; dstr=`${Number(diff).toFixed(1)}%`; }
+    if (!d.PRECIO_WEB||d.PRECIO_WEB==0) { dcls='p-na'; dstr='sin precio'; }
+    return `<tr>
+      <td><span class="cod">${d.COD_STA11||'—'}</span></td>
+      <td class="desc-cell"><span class="desc-txt" title="${esc(d.DESCRIPCION)}">${esc(d.DESCRIPCION)||'—'}</span></td>
+      <td><a class="mla-link" href="${url}" target="_blank">${mla}</a></td>
+      <td class="r">${fmt(d.PRECIO_NEXO)}</td>
+      <td class="r">${fmt(d.PRECIO_WEB)}</td>
+      <td class="r ${dcls}">${dstr}</td>
+      <td class="mono">${(d.FECHA_PRECIO||'').slice(0,10)||'—'}</td>
+    </tr>`;
+  }).join('')}
+  </tbody></table>`;
+}
+
+// ── DESHABILITADOS ────────────────────────────────────────────
+function cargarDeshabilitados() { jsonp('deshabilitados','recibirDeshabilitados'); }
+
+function recibirDeshabilitados(r) {
+  if (!r || !r.ok) return;
+  DATA.deshabilitados = r.data || [];
+  renderDeshabilitados();
+}
+
+function renderDeshabilitados() {
+  const q   = (document.getElementById('q1').value||'').toLowerCase();
+  const fil = filtros[1];
+
+  const rows = DATA.deshabilitados.filter(d => {
+    const txt = !q || [d.COD_STA11,d.DESCRIPCION,d.CODIGO_MLA,d.SKU]
+      .some(v => (v||'').toLowerCase().includes(q));
+    if (!txt) return false;
+    if (fil === 'todos')    return true;
+    if (fil === 'constock') return parseInt(d.STOCK_CD||0) > 0;
+    if (fil === 'ventas')   return parseInt(d.UNIDADES_30D||0) > 0;
+    return true;
+  });
+
+  const total    = DATA.deshabilitados.length;
+  const constock = DATA.deshabilitados.filter(d => parseInt(d.STOCK_CD||0) > 0).length;
+  const ventas   = DATA.deshabilitados.filter(d => parseInt(d.UNIDADES_30D||0) > 0).length;
+
+  document.getElementById('p1-total').textContent    = total;
+  document.getElementById('p1-constock').textContent = constock;
+  document.getElementById('p1-ventas').textContent   = ventas;
+  document.getElementById('tc1').textContent         = total;
+  document.getElementById('ic1').textContent         = `${rows.length} artículos`;
+
+  if (!rows.length) {
+    document.getElementById('tbody1').innerHTML =
+      '<div style="text-align:center;padding:32px;color:#94a3b8">Sin resultados</div>';
+    return;
+  }
+
+  document.getElementById('tbody1').innerHTML = `
+  <table><thead><tr>
+    <th>Código</th><th>Descripción</th><th>MLA</th><th>Estado Nexo</th>
+    <th class="r">Stock CD</th><th class="r">Uds 30d</th><th>Última venta</th>
+  </tr></thead><tbody>
+  ${rows.map(d => {
+    const mla  = 'MLA'+String(d.CODIGO_MLA||'');
+    const url  = `https://www.mercadolibre.com.ar/p/${mla}`;
+    const stk  = parseInt(d.STOCK_CD||0);
+    const uds  = parseInt(d.UNIDADES_30D||0);
+    const stkCls = stk > 0 ? 'p-up' : stk < 0 ? 'p-down' : 'p-na';
+    const udsCls = uds > 0 ? 'p-down' : 'p-na';
+    return `<tr>
+      <td><span class="cod">${d.COD_STA11||'—'}</span></td>
+      <td class="desc-cell"><span class="desc-txt" title="${esc(d.DESCRIPCION)}">${esc(d.DESCRIPCION)||'—'}</span></td>
+      <td><a class="mla-link" href="${url}" target="_blank">${mla}</a></td>
+      <td><span class="badge badge-amber">${d.ESTADO||'—'}</span></td>
+      <td class="r ${stkCls}">${stk}</td>
+      <td class="r ${udsCls}">${uds||'—'}</td>
+      <td class="mono">${(d.ULTIMA_VENTA||'').slice(0,10)||'—'}</td>
+    </tr>`;
+  }).join('')}
+  </tbody></table>`;
+}
+
+// ── ÓRDENES ──────────────────────────────────────────────────
+function cargarOrdenes() { jsonp('ordenes','recibirOrdenes'); }
+
+function recibirOrdenes(r) {
+  if (!r || !r.ok) return;
+  DATA.ordenes = r.data || [];
+  renderOrdenes();
+}
+
+function renderOrdenes() {
+  const q   = (document.getElementById('q2').value||'').toLowerCase();
+  const fil = filtros[2];
+
+  const rows = DATA.ordenes.filter(d => {
+    const txt = !q || [d.ORDER_ID_TIENDA,d.COD_CLIENT,d.NRO_PEDIDO]
+      .some(v => (v||'').toLowerCase().includes(q));
+    if (!txt) return false;
+    if (fil === 'todos') return true;
+    const st = d.ESTADO_ORDEN||'';
+    if (fil === 'FIN') return st.startsWith('FINALIZADA');
+    if (fil === 'PRO') return st === 'EN PROCESO';
+    if (fil === 'CAN') return st.includes('CANCEL') || st.includes('ANULADA');
+    return true;
+  });
+
+  const total = DATA.ordenes.length;
+  const fin   = DATA.ordenes.filter(d => (d.ESTADO_ORDEN||'').startsWith('FINALIZADA')).length;
+  const proc  = DATA.ordenes.filter(d => d.ESTADO_ORDEN === 'EN PROCESO').length;
+  const can   = DATA.ordenes.filter(d => {
+    const s = d.ESTADO_ORDEN||'';
+    return s.includes('CANCEL') || s.includes('ANULADA');
+  }).length;
+
+  document.getElementById('p2-total').textContent = total;
+  document.getElementById('p2-fin').textContent   = fin;
+  document.getElementById('p2-proc').textContent  = proc;
+  document.getElementById('p2-can').textContent   = can;
+  document.getElementById('tc2').textContent      = total;
+  document.getElementById('ic2').textContent      = `${rows.length} órdenes`;
+
+  if (!rows.length) {
+    document.getElementById('tbody2').innerHTML =
+      '<div style="text-align:center;padding:32px;color:#94a3b8">Sin resultados</div>';
+    return;
+  }
+
+  const fmt = v => v ? '$'+Number(v).toLocaleString('es-AR',{minimumFractionDigits:0}) : '—';
+
+  document.getElementById('tbody2').innerHTML = `
+  <table><thead><tr>
+    <th>Orden ML</th><th>Estado</th><th>Fecha</th>
+    <th>Nro Pedido Tango</th><th>Cliente</th>
+    <th class="r">Total</th><th>Artículos</th>
+  </tr></thead><tbody>
+  ${rows.map(d => {
+    const st  = d.ESTADO_ORDEN||'';
+    let bcls = 'est-OTR';
+    if (st.startsWith('FINALIZADA')) bcls='est-FIN';
+    else if (st==='EN PROCESO')     bcls='est-PRO';
+    else if (st.includes('CANCEL')||st.includes('ANULADA')) bcls='est-CAN';
+    return `<tr>
+      <td class="mono">${d.ORDER_ID_TIENDA||'—'}</td>
+      <td><span class="estado-badge ${bcls}">${st||'—'}</span></td>
+      <td class="mono">${(d.FECHA_ORDEN||'').slice(0,10)||'—'}</td>
+      <td><span class="cod">${d.NRO_PEDIDO||'—'}</span></td>
+      <td class="mono">${d.COD_CLIENT||'—'}</td>
+      <td class="r">${fmt(d.TOTAL_ORDEN)}</td>
+      <td class="mono">${d.CANT_ARTICULOS||'—'}</td>
+    </tr>`;
+  }).join('')}
+  </tbody></table>`;
+}
+
+// ── EXPORTAR CSV ─────────────────────────────────────────────
+function exportar(tab) {
+  const q   = (document.getElementById('q'+tab).value||'').toLowerCase();
+  const fil = filtros[tab];
+  let filas = [], cols = [], heads = [], nombre = '';
+
+  if (tab === 0) {
+    filas = DATA.precios.filter(d => {
+      if (fil==='alto')      return d.DIFF_PCT>0;
+      if (fil==='bajo')      return d.DIFF_PCT<0;
+      if (fil==='sinprecio') return !d.PRECIO_WEB||d.PRECIO_WEB==0;
+      return true;
+    }).filter(d => !q || [d.COD_STA11,d.DESCRIPCION,d.CODIGO_MLA].some(v=>(v||'').toLowerCase().includes(q)));
+    cols  = ['COD_STA11','DESCRIPCION','CODIGO_MLA','SKU','ESTADO','PRECIO_NEXO','PRECIO_WEB','DIFF_PCT','FECHA_PRECIO'];
+    heads = ['Codigo','Descripcion','MLA','SKU','Estado','Precio Nexo','Precio WEB L20','Dif %','Fecha precio'];
+    nombre= 'CHEMES_ML_Precios';
+  } else if (tab === 1) {
+    filas = DATA.deshabilitados.filter(d => {
+      if (fil==='constock') return parseInt(d.STOCK_CD||0)>0;
+      if (fil==='ventas')   return parseInt(d.UNIDADES_30D||0)>0;
+      return true;
+    }).filter(d => !q || [d.COD_STA11,d.DESCRIPCION,d.CODIGO_MLA].some(v=>(v||'').toLowerCase().includes(q)));
+    cols  = ['COD_STA11','DESCRIPCION','CODIGO_MLA','SKU','ESTADO','STOCK_CD','UNIDADES_30D','ULTIMA_VENTA'];
+    heads = ['Codigo','Descripcion','MLA','SKU','Estado','Stock CD','Uds 30d','Ultima venta'];
+    nombre= 'CHEMES_ML_Deshabilitados';
+  } else {
+    filas = DATA.ordenes.filter(d => {
+      const st=d.ESTADO_ORDEN||'';
+      if (fil==='FIN') return st.startsWith('FINALIZADA');
+      if (fil==='PRO') return st==='EN PROCESO';
+      if (fil==='CAN') return st.includes('CANCEL')||st.includes('ANULADA');
+      return true;
+    }).filter(d => !q || [d.ORDER_ID_TIENDA,d.COD_CLIENT,d.NRO_PEDIDO].some(v=>(v||'').toLowerCase().includes(q)));
+    cols  = ['ORDER_ID_TIENDA','ESTADO_ORDEN','FECHA_ORDEN','NRO_PEDIDO','COD_CLIENT','TOTAL_ORDEN','CANT_ARTICULOS'];
+    heads = ['Orden ML','Estado','Fecha','Nro Pedido','Cliente','Total','Articulos'];
+    nombre= 'CHEMES_ML_Ordenes';
+  }
+
+  const esc2 = v => {
+    const s = v===null||v===undefined ? '' : String(v);
+    return s.includes(',')||s.includes('"')||s.includes('\n') ? '"'+s.replace(/"/g,'""')+'"' : s;
+  };
+  const fecha  = new Date().toISOString().slice(0,10);
+  const csv    = '\uFEFF' + heads.join(',') + '\n' +
+    filas.map(d => cols.map(c => esc2(d[c])).join(',')).join('\n');
+  const blob   = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url    = URL.createObjectURL(blob);
+  const a      = document.createElement('a');
+  a.href=url; a.download=`${nombre}_${fecha}.csv`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── UTILS ─────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toggleTheme() {
+  const dark = document.body.getAttribute('data-theme')==='dark';
+  document.body.setAttribute('data-theme', dark?'light':'dark');
+  document.getElementById('themeBtn').textContent = dark?'🌙':'☀️';
+  localStorage.setItem('ch-theme', dark?'light':'dark');
+}
+
+setInterval(()=>{
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+},1000);
+
+(function(){
+  const s=localStorage.getItem('ch-theme')||'light';
+  document.body.setAttribute('data-theme',s);
+  window.addEventListener('DOMContentLoaded',()=>{
+    document.getElementById('themeBtn').textContent=s==='dark'?'☀️':'🌙';
+  });
+})();
+
+document.addEventListener('DOMContentLoaded', () => {
+  recargar();
+  setInterval(recargar, 30*60*1000);
+});
+</script>
+</body>
+</html>
